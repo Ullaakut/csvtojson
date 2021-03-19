@@ -18,12 +18,12 @@ type Routine struct {
 	Title   string   `json:"title"`
 	Sources []string `json:"sources"`
 	Flags   []string `json:"flags"`
-	Steps   Steps    `json:"steps"`
+	Steps   []Step  `json:"steps"`
 }
 
-type Steps struct {
-	Morning []Product `json:"Morning"`
-	Evening []Product `json:"Evening"`
+type Step struct {
+	Time     string    `json:"time"`
+	Products []Product `json:"products"`
 }
 
 type Product struct {
@@ -38,7 +38,7 @@ type intermRoutine struct {
 	Title   string
 	Sources map[string]struct{}
 	Flags   map[string]struct{}
-	Steps   Steps
+	Steps   map[string][]Product
 }
 
 type CSVProduct struct {
@@ -89,6 +89,10 @@ func main() {
 		routine := interm[p.Person]
 		routine.Title = p.Person
 
+		if routine.Steps == nil {
+			routine.Steps = make(map[string][]Product)
+		}
+
 		if routine.Sources == nil {
 			routine.Sources = make(map[string]struct{})
 		}
@@ -125,9 +129,9 @@ func main() {
 
 		if p.MorningProduct != "" {
 			mp := Product{
-				Name:        p.MorningProduct,
-				Link:        p.MorningProductLink,
-				Type:        p.MorningProductType,
+				Name: p.MorningProduct,
+				Link: p.MorningProductLink,
+				Type: p.MorningProductType,
 			}
 
 			for _, ingredient := range strings.Split(p.MorningProductIngredients, ",") {
@@ -153,14 +157,14 @@ func main() {
 				mp.Flags = append(mp.Flags, "P")
 			}
 
-			routine.Steps.Morning = append(routine.Steps.Morning, mp)
+			routine.Steps["Morning"] = append(routine.Steps["Morning"], mp)
 		}
 
 		if p.NightProduct != "" {
 			np := Product{
-				Name:        p.NightProduct,
-				Link:        p.NightProductLink,
-				Type:        p.NightProductType,
+				Name: p.NightProduct,
+				Link: p.NightProductLink,
+				Type: p.NightProductType,
 			}
 
 			for _, ingredient := range strings.Split(p.NightProductIngredients, ",") {
@@ -186,7 +190,7 @@ func main() {
 				np.Flags = append(np.Flags, "P")
 			}
 
-			routine.Steps.Evening = append(routine.Steps.Evening, np)
+			routine.Steps["Evening"] = append(routine.Steps["Evening"], np)
 		}
 
 		interm[p.Person] = routine
@@ -197,7 +201,23 @@ func main() {
 		var routine Routine
 
 		routine.Title = title
-		routine.Steps = iRoutine.Steps
+		var morningSteps Step
+		var eveningSteps Step
+		for time, prod := range iRoutine.Steps {
+			switch time {
+			case "Morning":
+				morningSteps.Products = append(morningSteps.Products, prod...)
+			case "Evening":
+				eveningSteps.Products = append(eveningSteps.Products, prod...)
+			}
+		}
+		if len(morningSteps.Products) > 0 {
+			routine.Steps = append(routine.Steps,morningSteps)
+		}
+		if len(eveningSteps.Products) > 0 {
+			routine.Steps = append(routine.Steps,eveningSteps)
+		}
+
 		for flag := range iRoutine.Flags {
 			routine.Flags = append(routine.Flags, flag)
 		}

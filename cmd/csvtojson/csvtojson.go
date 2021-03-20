@@ -18,7 +18,7 @@ type Routine struct {
 	Title   string   `json:"title"`
 	Sources []string `json:"sources"`
 	Flags   []string `json:"flags"`
-	Steps   []Step  `json:"steps"`
+	Steps   []Step   `json:"steps"`
 }
 
 type Step struct {
@@ -201,8 +201,8 @@ func main() {
 		var routine Routine
 
 		routine.Title = title
-		var morningSteps Step
-		var eveningSteps Step
+		morningSteps := Step{Time: "Morning"}
+		eveningSteps := Step{Time: "Evening"}
 		for time, prod := range iRoutine.Steps {
 			switch time {
 			case "Morning":
@@ -212,10 +212,10 @@ func main() {
 			}
 		}
 		if len(morningSteps.Products) > 0 {
-			routine.Steps = append(routine.Steps,morningSteps)
+			routine.Steps = append(routine.Steps, morningSteps)
 		}
 		if len(eveningSteps.Products) > 0 {
-			routine.Steps = append(routine.Steps,eveningSteps)
+			routine.Steps = append(routine.Steps, eveningSteps)
 		}
 
 		for flag := range iRoutine.Flags {
